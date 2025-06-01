@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detección de Actividad Sospechosa</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f0f2f5;
+    }
+    #menu {
+      width: 220px;
+      background-color: #cbd7f4;
+      padding: 20px;
+      float: left;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    #menu a {
+      display: block;
+      margin-bottom: 10px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #menu a:hover {
+      color: #1a73e8;
+    }
+    #contenido {
+      margin-left: 240px;
+      padding: 20px;
+    }
+    .analisis {
+      display: none;
+    }
+    .activo {
+      display: block;
+    }
+    .resultado {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .seguro {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .normal {
+      background-color: #d6d4ed;
+      color: #153d57;
+    }
+    .sospechoso {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .alerta {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #fff3cd;
+      border-left: 6px solid #ffeeba;
+    }
+    .resumen {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #e8f4fc;
+      border-left: 6px solid #90cdf4;
+      font-style: italic;
+    }
+    .ia {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #fbeee6;
+      border-left: 6px solid #f3c088;
+    }
+  </style>
+</head>
+<body>
+  <div id="menu">
+    <a onclick="mostrarAnalisis('inicioSesion')">Inicios de sesión</a>
+    <!--<a onclick="mostrarAnalisis('apagadosSistema')">Apagados y reinicios</a>-->
+    <a onclick="mostrarAnalisis('cambiosUsuarios')">Cambios de usuarios</a>
+    <a onclick="mostrarAnalisis('erroresAplicaciones')">Errores de aplicaciones</a>
+    <a onclick="mostrarAnalisis('conexionesRemotas')">Conexiones remotas</a>
+    <a onclick="mostrarAnalisis('actividadFirewall')">Actividad del firewall</a>
+    <a onclick="mostrarAnalisis('correlacionEventos')">Correlación de eventos</a>
+  </div>
+
+  <div id="contenido">
+    <div id="inicioSesion" class="analisis activo">
+      <h2>Inicios de sesión</h2>
+      <p>Analiza los intentos de inicio de sesión para detectar actividad sospechosa.</p>
+      <button onclick="analizar('analizar_actividad', 'resultadoInicioSesion')">Analizar actividad reciente</button>
+      <div id="resultadoInicioSesion" class="resultado" style="display: none;"></div>
+    </div>
+
+    <!--<div id="apagadosSistema" class="analisis">
+      <h2>Apagados y reinicios</h2>
+      <p>Analiza los apagados y reinicios del sistema.</p>
+      <button onclick="analizar('analizar_apagados', 'resultadoApagados')">Analizar</button>
+      <div id="resultadoApagados" class="resultado" style="display: none;"></div>
+    </div>-->
+
+    <div id="cambiosUsuarios" class="analisis">
+      <h2>Cambios de usuarios</h2>
+      <p>Analiza los cambios recientes en los usuarios del sistema.</p>
+      <button onclick="analizar('analizar_cambios_usuarios', 'resultadoCambiosUsuarios')">Analizar</button>
+      <div id="resultadoCambiosUsuarios" class="resultado" style="display: none;"></div>
+    </div>
+
+    <div id="erroresAplicaciones" class="analisis">
+      <h2>Errores de aplicaciones</h2>
+      <p>Analiza los errores detectados en las aplicaciones del sistema.</p>
+      <button onclick="analizar('analizar_errores_app', 'resultadoErroresApp')">Analizar</button>
+      <div id="resultadoErroresApp" class="resultado" style="display: none;"></div>
+    </div>
+
+    <div id="conexionesRemotas" class="analisis">
+      <h2>Conexiones remotas</h2>
+      <p>Analiza las conexiones remotas recientes.</p>
+      <button onclick="analizar('analizar_conexiones_remotas', 'resultadoConexionesRemotas')">Analizar</button>
+      <div id="resultadoConexionesRemotas" class="resultado" style="display: none;"></div>
+    </div>
+
+    <div id="actividadFirewall" class="analisis">
+      <h2>Actividad del firewall</h2>
+      <p>Analiza la actividad reciente del firewall.</p>
+      <button onclick="analizar('analizar_actividad_firewall', 'resultadoFirewall')">Analizar</button>
+      <div id="resultadoFirewall" class="resultado" style="display: none;"></div>
+    </div>
+
+    <div id="correlacionEventos" class="analisis">
+      <h2>Correlación de eventos</h2>
+      <p>Detecta patrones sospechosos como escaladas de privilegios o ataques de fuerza bruta.</p>
+      <button onclick="detectarPatrones()">Buscar patrones sospechosos</button>
+      <div id="resultadoPatrones"></div>
+      <div id="resumenPatrones"></div>
+      <div id="iaPatrones"></div>
+    </div>
+  </div>
+
+  <script>
+    function mostrarAnalisis(analisis) {
+      const secciones = document.getElementsByClassName('analisis');
+      for (let i = 0; i < secciones.length; i++) {
+        secciones[i].classList.remove('activo');
+      }
+      document.getElementById(analisis).classList.add('activo');
+    }
+
+    async function analizar(endpoint, resultDivId) {
+      const res = await fetch(`http://localhost:8000/${endpoint}`, { method: "GET" });
+      const data = await res.json();
+      const resultDiv = document.getElementById(resultDivId);
+      resultDiv.style.display = "block";
+      resultDiv.className = "resultado " + (data.status === "sospechoso" ? "sospechoso" : "seguro");
+      resultDiv.textContent = data.aviso;
+    }
+
+    async function detectarPatrones() {
+      const res = await fetch("http://localhost:8000/detectar_patrones", { method: "GET" });
+      const data = await res.json();
+      const contenedor = document.getElementById("resultadoPatrones");
+      const resumenDiv = document.getElementById("resumenPatrones");
+      const iaDiv = document.getElementById("iaPatrones");
+
+      contenedor.innerHTML = "";
+      resumenDiv.innerHTML = "";
+      iaDiv.innerHTML = "";
+
+      if (data.alertas.length === 0) {
+        contenedor.innerHTML = '<p>No se detectaron patrones sospechosos recientes.</p>';
+      } else {
+        data.alertas.forEach(alerta => {
+          const div = document.createElement("div");
+          div.classList.add("alerta");
+          div.innerHTML = `<strong>${alerta.tipo}</strong>: ${alerta.descripcion}`;
+          contenedor.appendChild(div);
+        });
+      }
+
+      if (data.resumen && data.resumen.length > 0) {
+        resumenDiv.innerHTML = "<h4>Resumen del incidente:</h4>";
+        data.resumen.forEach(r => {
+          const resumen = document.createElement("div");
+          resumen.classList.add("resumen");
+          resumen.textContent = r;
+          resumenDiv.appendChild(resumen);
+        });
+      }
+
+      if (data.predicciones && data.predicciones.length > 0) {
+        iaDiv.innerHTML = "<h4>Predicciones de IA:</h4>";
+        data.predicciones.forEach(p => {
+          const div = document.createElement("div");
+          div.classList.add("ia");
+          div.innerHTML = `<strong>${p.usuario}</strong>: ${p.riesgo}<br>Eventos: ${JSON.stringify(p.evento_summary)}`;
+          iaDiv.appendChild(div);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
