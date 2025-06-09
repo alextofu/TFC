@@ -27,14 +27,6 @@ scikit-learn
 
 HTML5 y JavaScript
 
-Instalación y uso
-Clona el repositorio y accede al backend:
-git clone https://github.com/tu-usuario/proyecto-tfc.git
-cd backend
-
-Instala las dependencias:
-pip install -r requirements.txt
-
 Ejecuta la API:
 python -m uvicorn app:app --reload
 
